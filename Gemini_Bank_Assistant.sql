@@ -606,3 +606,40 @@ SELECT
   Gemini_bank_assistant('Pagar la factura de Edenor con mi tarjeta de débito.');
 SELECT
   Gemini_bank_assistant('Quiero configurar un plazo fijo por $10.000 a 30 días.');
+
+
+
+CREATE OR REPLACE FUNCTION Gemini_Bank_Assistantv2 (texto text)
+RETURNS VARCHAR AS $$
+DECLARE 
+resultado VARCHAR := '';
+BEGIN
+resultado:= (
+  WITH temp (user_text,cod_rta,tema,subtema,desc_subtema,rta_agente) AS (SELECT texto as user_text, cod_rta,tema,subtema,desc_subtema,rta_agente FROM flujos_bancochat
+ORDER BY embedding <=> embedding('text-embedding-005', texto)::vector LIMIT 5)
+  select rta_agente from (
+SELECT cod_rta,tema,subtema,rta_agente,
+(ML_PREDICT_ROW('projects/my-first-project-424319/locations/us-central1/publishers/google/models/gemini-1.5-pro-002:generateContent',
+          json_build_object(
+          'contents',
+          json_build_array(
+              json_build_object(
+                  'role', 'user',
+                  'parts', json_build_array(
+                      json_build_object('text', 'You are a financial assitant to tag the user request into different topics. You will recieve orders in SPANISH and you need to reply in SPANISH. You will not make any assumption, just focus on the main topic. They user is requesting ' || user_text ||' and you need to  classify it INTO the FOLLOWING topics:  '|| desc_subtema || ' You need to reply with the following 3 values: 
+                      1) MATCH: if the user request and the topic are at least 85% similar: YES. Otherwize NO. If the difference between the user request and the topics is about the type of service or the type of operation you should catalog as NO.
+                      2) Difference: short insight around the difference between the user input and the topic
+                      3) OPERATION: one word for the banking operation that the user wants')
+                  )
+              )
+          )
+        )
+  ) -> 'candidates'
+    -> 0
+    -> 'content') as LLM_RESPONSE
+FROM  temp
+) as X
+where cast(LLM_RESPONSE as VARCHAR(500)) like '%MATCH:%YES%' limit 1);
+RETURN resultado;
+END
+; $$ LANGUAGE plpgsql;
