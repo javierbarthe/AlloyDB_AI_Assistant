@@ -37,14 +37,14 @@ conn = psycopg2.connect(
     host='127.0.0.1',
     database='assistantdemo',
     user='postgres',
-    password='SuperAdmin22',
+    password='',
     port='5432'
 )
 cursor = conn.cursor()
 # Initialize the Gemini chat model with the API key
 chat = ChatVertexAI(
     model_name="gemini-1.5-pro-002",
-    google_api_key="AIzaSyB293NRs_COfPjPF2U7EniyKnPWu11fOHA"
+    google_api_key=""
 )
 
 # Initialize chat history
