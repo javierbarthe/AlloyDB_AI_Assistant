@@ -1,0 +1,14 @@
+streamlit-chat
+vertexai
+google-cloud-aiplatform
+psycopg2
+protobuf
+python-dotenv
+streamlit-extras
+langchain_google_vertexai
+langchain-google-genai
+requests
+streamlit
+streamlit-lottie
+langchain
+langchain_community
